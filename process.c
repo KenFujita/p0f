@@ -1147,20 +1147,24 @@ void query_to_json(char* src_data, char* res_data){
 	no_heron = 0;
 	t_src = src_data;
 
+	printf("%s",t_src);
 	while(*t_src!='\0'){
-		if(*t_src == '\r' && *(t_src+1) == '\n'){
+		if(strstr(t_src,"\r\n\r\n")!=NULL){
+			count++;
+			break;
+		}
+		if(t_src = strstr(t_src,"\r\n") != NULL){
 			t_src+=strlen("\r\n");
 			count++;
 		}
-		if(*t_src == '\0') break;
-		t_src++;
+		else{
+			break;
+		}
 	}
 
 	struct http_header h[count];
-	t_src = src_data;
 
-	split_data(src_data,t_src,count,&no_heron,h);
-	if(no_heron == 1) return;
+	if(split_data(src_data,count,h)!=1) return;
 
 	for(i=0;i<count;i++){
                 strcat(res_data,"\"");
@@ -1178,35 +1182,32 @@ void query_to_json(char* src_data, char* res_data){
 
 /* split HTTP request header */
 
-void split_data(char* src, char* pointer, int cnt, int* flag, struct http_header *query){
+int split_data(char* src, int cnt, struct http_header *query){
 
+	if(cnt == 0) return 0;
+	
 	char *sp;
-	char *list[cnt];
-	int i=0;
+	char *pointer;
 
 	pointer = strtok(src,"\r\n");
-	list[i] = pointer;
-	if(strstr(list[i],"heron_id") == NULL){
+	if(strstr(pointer,"heron_id") == NULL){
 		// no heron_id, do not split_data
-		*flag = 1;
-		return;
+		return 0;
 	}
-	(query+i)->name = "method";
-	(query+i)->value = list[i];
-	i++;
+	query->name = "method";
+	query->value = pointer;
 
-	while(pointer != NULL && i < cnt){
+	for(int i=1;i < cnt;i++){
 		pointer = strtok(NULL,"\r\n");
-		list[i] = pointer;
-		sp = strstr(list[i],": ");
+		if(pointer==NULL) break;
+		sp = strstr(pointer,": ");
 		*sp = '\0';
 		sp += 2;
-		(query+i)->name = list[i];
+		(query+i)->name = pointer;
 		(query+i)->value = sp;
-		i++;
 	}
 
-	return;
+	return 1;
 }
 
 void change_char(char* key){
