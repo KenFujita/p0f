@@ -1147,7 +1147,7 @@ void query_to_json(char* src_data, char* res_data){
 	no_heron = 0;
 	t_src = src_data;
 
-	printf("%s",t_src);
+	/* ここのカウントがおかしいので要検証 */
 	while(*t_src!='\0'){
 		if(strstr(t_src,"\r\n\r\n")!=NULL){
 			count++;
@@ -1166,6 +1166,7 @@ void query_to_json(char* src_data, char* res_data){
 
 	if(split_data(src_data,count,h)!=1) return;
 
+	/* {key:method,value:GET~} のようにする*/
 	for(i=0;i<count;i++){
                 strcat(res_data,"\"");
 		change_char(h[i].name);
@@ -1197,6 +1198,7 @@ int split_data(char* src, int cnt, struct http_header *query){
 	query->name = "method";
 	query->value = pointer;
 
+	/* ダブルクォーテーションの判定を行う */
 	for(int i=1;i < cnt;i++){
 		pointer = strtok(NULL,"\r\n");
 		if(pointer==NULL) break;
